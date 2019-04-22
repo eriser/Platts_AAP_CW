@@ -34,8 +34,20 @@ AapCourseworkAudioProcessor::AapCourseworkAudioProcessor()
     // Add Stereo Width Slider
     addParameter(stereoWidth = new AudioParameterFloat("stereoWidth", "Stereo Width", 0.0f, 2.0f, 1.0f));
     
-    // Phase Inversion
-    addParameter(invertPhase = new AudioParameterBool("invertPhase", "Phase Inversion", false));
+    // Phase Inversion Mid
+    addParameter(invertPhaseM = new AudioParameterBool("invertPhaseM", "Mid Phase Inversion", false));
+    
+    // Phase Inversion Side
+    addParameter(invertPhaseS = new AudioParameterBool("invertPhaseS", "Side Phase Inversion", false));
+    
+    // Mid Gain
+    addParameter(gainMid = new AudioParameterFloat("gainMid", "Mid Gain", 0.0f, 1.0f, 1.0f));
+    
+    // Side Gain
+    addParameter(gainSide = new AudioParameterFloat("gainSide", "Side Gain", 0.0f, 1.0f, 1.0f));
+    
+    
+    
 }
 
 AapCourseworkAudioProcessor::~AapCourseworkAudioProcessor()
@@ -181,8 +193,10 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
             auto inputChoice = inputSelect->getIndex();
             auto outputChoice = outputSelect->getIndex();
             auto width = stereoWidth->get();
-            auto invertChoice = invertPhase->get();
-            
+            auto invertChoiceM = invertPhaseM->get();
+            auto invertChoiceS = invertPhaseS->get();
+            auto gainM = gainMid->get();
+            auto gainS = gainSide->get();
             
             // Combination select Stereo input, Stereo Output
             if (inputChoice == 1 && outputChoice == 1) {
@@ -196,7 +210,16 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
                 xMid = (2.0f - width) * xMid;
                 
                 // Phase
-                auto phase = *invertPhase ? -1.0f : 1.0f;
+                auto phaseM = invertChoiceM ? -1.0f : 1.0f;
+                xMid = phaseM * xMid;
+                auto phaseS = invertChoiceS ? -1.0f : 1.0f;
+                xSide = phaseS * xSide;
+                
+                // Mid Gain
+                xMid = gainM * xMid ;
+                
+                // Side Gain
+                xSide = gainS * xSide  ;
                 
                 // Output - Decoding MS to Stereo
                 channelDataLeft[i] = (xMid + xSide);
@@ -217,7 +240,16 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
                 xMid = (2.0f - width) * xMid;
                 
                 // Phase
-                auto phase = *invertPhase ? -1.0f : 1.0f;
+                auto phaseM = invertChoiceM ? -1.0f : 1.0f;
+                xMid = phaseM * xMid;
+                auto phaseS = invertChoiceS ? -1.0f : 1.0f;
+                xSide = phaseS * xSide;
+                
+                // Mid Gain
+                xMid = gainM * xMid ;
+                
+                // Side Gain
+                xSide = gainS * xSide  ;
                 
                 // Output - Decoding Stereo to MS
                 xMid = channelDataLeft[i];
@@ -239,7 +271,16 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
                 xMid = (2.0f - width) * xMid;
                 
                 // Phase
-                auto phase = *invertPhase ? -1.0f : 1.0f;
+                auto phaseM = invertChoiceM ? -1.0f : 1.0f;
+                xMid = phaseM * xMid;
+                auto phaseS = invertChoiceS ? -1.0f : 1.0f;
+                xSide = phaseS * xSide;
+                
+                // Mid Gain
+                xMid = gainM * xMid ;
+                
+                // Side Gain
+                xSide = gainS * xSide  ;
                 
                 // Output - Decoding MS to Stereo
                 channelDataLeft[i] = (xMid + xSide);
@@ -261,7 +302,16 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
                 xMid = (2.0f - width) * xMid;
                 
                 // Phase
-                auto phase = *invertPhase ? -1.0f : 1.0f;
+                auto phaseM = invertChoiceM ? -1.0f : 1.0f;
+                xMid = phaseM * xMid;
+                auto phaseS = invertChoiceS ? -1.0f : 1.0f;
+                xSide = phaseS * xSide;
+                
+                // Mid Gain
+                xMid = gainM * xMid ;
+                
+                // Side Gain
+                xSide = gainS * xSide  ;
                 
                 // Output - Decoding Stereo to MS
                 xMid = channelDataLeft[i];
@@ -298,7 +348,10 @@ void AapCourseworkAudioProcessor::getStateInformation (MemoryBlock& destData)
     stream.writeFloat(*stereoWidth);
     stream.writeInt(*inputSelect);
     stream.writeInt(*outputSelect);
-    stream.writeBool(*invertPhase);
+    stream.writeBool(*invertPhaseM);
+    stream.writeBool(*invertPhaseS);
+    stream.writeFloat(*gainMid);
+    stream.writeFloat(*gainSide);
 }
 
 void AapCourseworkAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
@@ -309,8 +362,10 @@ void AapCourseworkAudioProcessor::setStateInformation (const void* data, int siz
     stereoWidth->setValueNotifyingHost(stereoWidth->getNormalisableRange().convertTo0to1(stream.readFloat()));
     inputSelect->setValueNotifyingHost(inputSelect->getNormalisableRange().convertTo0to1(stream.readInt()));
     outputSelect->setValueNotifyingHost(outputSelect->getNormalisableRange().convertTo0to1(stream.readInt()));
-    invertPhase->setValueNotifyingHost(invertPhase->getNormalisableRange().convertTo0to1(stream.readBool()));
-    
+    invertPhaseM->setValueNotifyingHost(invertPhaseM->getNormalisableRange().convertTo0to1(stream.readBool()));
+    invertPhaseS->setValueNotifyingHost(invertPhaseS->getNormalisableRange().convertTo0to1(stream.readBool()));
+    gainMid->setValueNotifyingHost(gainMid->getNormalisableRange().convertTo0to1(stream.readFloat()));
+    gainSide->setValueNotifyingHost(gainSide->getNormalisableRange().convertTo0to1(stream.readFloat()));
 }
 
 //==============================================================================
@@ -319,4 +374,3 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new AapCourseworkAudioProcessor();
 }
-
