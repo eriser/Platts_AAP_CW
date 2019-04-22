@@ -62,4 +62,5 @@ private:
     AudioParameterChoice* inputSelect;
     AudioParameterChoice* outputSelect;
     AudioParameterFloat* stereoWidth;
+    AudioParameterBool* invertPhase;
 };
