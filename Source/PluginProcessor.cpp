@@ -46,6 +46,9 @@ AapCourseworkAudioProcessor::AapCourseworkAudioProcessor()
     // Side Gain
     addParameter(gainSide = new AudioParameterFloat("gainSide", "Side Gain", 0.0f, 1.0f, 1.0f));
     
+    // Channel Swap
+    addParameter(chanSwap = new AudioParameterChoice("chanSwap", "Swap Channel", {"Off", "ON"}, 0));
+    
     
     
 }
@@ -186,7 +189,17 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
         
         auto* channelDataLeft = buffer.getWritePointer(0);
         auto* channelDataRight = buffer.getWritePointer(1);
+            
+        auto channelChoice = chanSwap->getIndex();
         
+        if (channelChoice == 1){
+           
+            auto* channelDataLeft = buffer.getWritePointer(1);
+            auto* channelDataRight = buffer.getWritePointer(0);
+            
+        }
+    
+
         
         for(int i = 0; i < buffer.getNumSamples(); i++) {
             
@@ -197,6 +210,7 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
             auto invertChoiceS = invertPhaseS->get();
             auto gainM = gainMid->get();
             auto gainS = gainSide->get();
+            
             
             // Combination select Stereo input, Stereo Output
             if (inputChoice == 1 && outputChoice == 1) {
@@ -222,8 +236,8 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
                 xSide = gainS * xSide  ;
                 
                 // Output - Decoding MS to Stereo
-                channelDataLeft[i] = (xMid + xSide);
-                channelDataRight[i] = (xMid - xSide);
+                channelDataLeft[i] = 0.707f * (xMid + xSide);
+                channelDataRight[i] = 0.707f * (xMid - xSide);
                 
                 
             }
@@ -252,8 +266,8 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
                 xSide = gainS * xSide  ;
                 
                 // Output - Decoding Stereo to MS
-                xMid = channelDataLeft[i];
-                xSide = channelDataRight[i];
+                xMid = 0.707f * channelDataLeft[i];
+                xSide = 0.707f * channelDataRight[i];
                 
                 
             }
@@ -283,8 +297,8 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
                 xSide = gainS * xSide  ;
                 
                 // Output - Decoding MS to Stereo
-                channelDataLeft[i] = (xMid + xSide);
-                channelDataRight[i] = (xMid - xSide);
+                channelDataLeft[i] = 0.707f *  (xMid + xSide);
+                channelDataRight[i] = 0.707f *  (xMid - xSide);
                 
                 
             }
@@ -314,8 +328,8 @@ void AapCourseworkAudioProcessor::processBlock (AudioBuffer<float>& buffer, Midi
                 xSide = gainS * xSide  ;
                 
                 // Output - Decoding Stereo to MS
-                xMid = channelDataLeft[i];
-                xSide = channelDataRight[i];
+                xMid = 0.707f * channelDataLeft[i];
+                xSide = 0.707f * channelDataRight[i];
                 
             }
             
@@ -352,6 +366,7 @@ void AapCourseworkAudioProcessor::getStateInformation (MemoryBlock& destData)
     stream.writeBool(*invertPhaseS);
     stream.writeFloat(*gainMid);
     stream.writeFloat(*gainSide);
+    stream.writeInt(*chanSwap);
 }
 
 void AapCourseworkAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
@@ -366,6 +381,7 @@ void AapCourseworkAudioProcessor::setStateInformation (const void* data, int siz
     invertPhaseS->setValueNotifyingHost(invertPhaseS->getNormalisableRange().convertTo0to1(stream.readBool()));
     gainMid->setValueNotifyingHost(gainMid->getNormalisableRange().convertTo0to1(stream.readFloat()));
     gainSide->setValueNotifyingHost(gainSide->getNormalisableRange().convertTo0to1(stream.readFloat()));
+    chanSwap->setValueNotifyingHost(chanSwap->getNormalisableRange().convertTo0to1(stream.readInt()));
 }
 
 //==============================================================================

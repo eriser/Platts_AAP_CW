@@ -66,5 +66,6 @@ private:
     AudioParameterBool* invertPhaseS;
     AudioParameterFloat* gainMid;
     AudioParameterFloat* gainSide;
+    AudioParameterChoice* chanSwap;
     
 };
